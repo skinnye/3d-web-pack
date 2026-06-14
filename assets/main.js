@@ -97,6 +97,7 @@ const fragmentShader = /* glsl */ `
 `;
 
 let renderer, scene, camera, composer, blob, particles, bloom;
+let lenis = null;
 const uniforms = {
   uTime:     { value: 0 },
   uDisplace: { value: 0.42 },
@@ -210,7 +211,13 @@ function initMotion() {
 
   // Lenis smooth scroll (skip if reduced motion)
   if (!reduceMotion && window.Lenis) {
-    const lenis = new window.Lenis({ lerp: 0.1, smoothWheel: true });
+    lenis = new window.Lenis({
+      duration: 1.05,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.6,
+    });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -268,6 +275,19 @@ function initUI() {
       const r = card.getBoundingClientRect();
       card.style.setProperty('--mx', `${e.clientX - r.left}px`);
       card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+
+  // smooth in-page anchor navigation (routed through Lenis)
+  document.querySelectorAll('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (!id || id.length < 2) return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      if (lenis) lenis.scrollTo(target, { offset: -70, duration: 1.1 });
+      else target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
     });
   });
 }
