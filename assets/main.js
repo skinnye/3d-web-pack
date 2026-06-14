@@ -193,7 +193,7 @@ function onPointerMove(e) {
   pointer.ty = -((e.clientY / window.innerHeight) * 2 - 1);
 }
 
-let _frames = 0, _acc = 0, _last = performance.now(), _skip = 0;
+let _frames = 0, _acc = 0, _last = performance.now();
 
 // step down quality if the average frame-rate is poor (weak GPUs)
 function downgrade(fps) {
@@ -208,9 +208,8 @@ function animate() {
   if (!pageVisible) return;                       // pause when tab is hidden
 
   const now = performance.now();
-  // the canvas is a fixed background — throttle to ~30fps once it's scrolled out of focus
-  const farAway = window.scrollY > window.innerHeight * 1.25;
-  if (farAway) { _skip ^= 1; if (_skip) { _last = now; return; } }
+  // the blob is a hero element that fades out on scroll — stop rendering once it's gone
+  if (window.scrollY > window.innerHeight * 0.82) { _last = now; _frames = 0; _acc = 0; return; }
 
   const t = clock.getElapsedTime();
   uniforms.uTime.value = t;
@@ -230,11 +229,9 @@ function animate() {
 
   composer.render();   // single, consistent render path (bloom toggled via bloom.enabled)
 
-  // sample fps once per second (only while the hero is on screen) and adapt
-  if (!farAway) {
-    _frames++; _acc += now - _last;
-    if (_acc >= 1000) { downgrade(_frames * 1000 / _acc); _frames = 0; _acc = 0; }
-  } else { _frames = 0; _acc = 0; }
+  // sample fps once per second and adapt quality
+  _frames++; _acc += now - _last;
+  if (_acc >= 1000) { downgrade(_frames * 1000 / _acc); _frames = 0; _acc = 0; }
   _last = now;
 }
 
@@ -304,7 +301,13 @@ function initMotion() {
    ============================================================ */
 function initUI() {
   const nav = document.getElementById('nav');
-  const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 40);
+  const webgl = document.getElementById('webgl');
+  const onScroll = () => {
+    const y = window.scrollY;
+    nav.classList.toggle('is-scrolled', y > 40);
+    // the 3D blob belongs to the hero — fade it out so it never bisects content below
+    if (webgl) webgl.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.8)).toFixed(3);
+  };
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
 
