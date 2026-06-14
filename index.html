@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Web Pack — Claude Code agents &amp; skills for award-style 3D sites</title>
+  <meta name="description" content="A Claude Code pack of 6 specialized agents and 4 skills for building high-end 3D / WebGL websites with Three.js, React Three Fiber, WebGPU, GSAP and more." />
+  <meta name="theme-color" content="#060608" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="3D Web Pack — agents &amp; skills for award-style 3D sites" />
+  <meta property="og:description" content="6 agents + 4 skills for Claude Code. Build Awwwards-style 3D websites end to end." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+
+  <!-- Motion libs (UMD globals, load before the module) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <!-- Three.js via import map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- WebGL hero canvas -->
+  <canvas id="webgl"></canvas>
+
+  <!-- Top navigation -->
+  <header class="nav" id="nav">
+    <a href="#top" class="nav__brand">
+      <span class="nav__logo">◈</span> 3D&nbsp;Web&nbsp;Pack
+    </a>
+    <nav class="nav__links">
+      <a href="#agents">Agents</a>
+      <a href="#skills">Skills</a>
+      <a href="#stack">Stack</a>
+      <a href="#install">Install</a>
+      <a class="nav__cta" href="https://github.com/skinnye/3d-web-pack" target="_blank" rel="noopener" data-gh>GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero__inner">
+        <p class="hero__eyebrow reveal">Claude Code · 6 agents · 4 skills</p>
+        <h1 class="hero__title">
+          <span class="reveal-line">Build <em>award-style</em></span>
+          <span class="reveal-line">3D websites.</span>
+        </h1>
+        <p class="hero__sub reveal">
+          A ready-made pack of specialized AI agents and skills that take you
+          from architecture to 60&nbsp;fps — Three.js, React&nbsp;Three&nbsp;Fiber,
+          WebGPU, shaders, scroll-motion and asset pipelines, all wired into Claude&nbsp;Code.
+        </p>
+        <div class="hero__actions reveal">
+          <a class="btn btn--primary" href="#install">Get the pack</a>
+          <a class="btn btn--ghost" href="#agents">Explore agents</a>
+        </div>
+        <div class="hero__scroll reveal" aria-hidden="true">
+          <span></span> scroll
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats" id="stats">
+      <div class="stats__grid">
+        <div class="stat reveal"><span class="stat__num" data-count="6">0</span><span class="stat__label">Specialized agents</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="4">0</span><span class="stat__label">Workflow skills</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="60">0</span><span class="stat__label">Target FPS</span></div>
+        <div class="stat reveal"><span class="stat__num" data-count="100">0</span><span class="stat__label">Draw-call budget</span></div>
+      </div>
+    </section>
+
+    <!-- WHAT IS IT -->
+    <section class="section intro" id="about">
+      <div class="section__head reveal">
+        <span class="kicker">What is this</span>
+        <h2>Your studio-in-a-box for the 3D web.</h2>
+        <p class="lead">
+          The 3D Web Pack drops six expert agents and four guided skills into Claude&nbsp;Code.
+          Each agent owns one layer of a high-end 3D site — architecture, scene code, shaders,
+          motion, performance, assets — so you ship the kind of experience you see on
+          Awwwards, FWA and Codrops without becoming a Three.js wizard first.
+        </p>
+      </div>
+    </section>
+
+    <!-- AGENTS -->
+    <section class="section" id="agents">
+      <div class="section__head reveal">
+        <span class="kicker">06 — Agents</span>
+        <h2>Six specialists, one pipeline.</h2>
+      </div>
+      <div class="cards cards--agents">
+        <article class="card reveal" style="--c:#5b8cff">
+          <span class="card__icon">⬡</span>
+          <h3>threejs-architect</h3>
+          <p>Plans the stack, scene graph, render strategy and FPS / asset budgets before a line of code.</p>
+        </article>
+        <article class="card reveal" style="--c:#7c5cff">
+          <span class="card__icon">⚛</span>
+          <h3>r3f-engineer</h3>
+          <p>Builds the scene in React Three Fiber &amp; Three.js — meshes, lights, materials, model loading, drei.</p>
+        </article>
+        <article class="card reveal" style="--c:#c44bff">
+          <span class="card__icon">✦</span>
+          <h3>shader-artist</h3>
+          <p>Writes GLSL &amp; TSL (WebGPU) — raymarching, noise, fresnel, dissolve, particles, custom materials.</p>
+        </article>
+        <article class="card reveal" style="--c:#ff5ca8">
+          <span class="card__icon">◐</span>
+          <h3>motion-choreographer</h3>
+          <p>Scroll storytelling &amp; camera choreography with GSAP ScrollTrigger, Lenis and drei ScrollControls.</p>
+        </article>
+        <article class="card reveal" style="--c:#ff8a5c">
+          <span class="card__icon">⚡</span>
+          <h3>webgl-perf-auditor</h3>
+          <p>Hunts frame drops — draw calls, instancing, LOD, compression, memory leaks, mobile tiers.</p>
+        </article>
+        <article class="card reveal" style="--c:#43e0c0">
+          <span class="card__icon">⬢</span>
+          <h3>asset-pipeline-engineer</h3>
+          <p>glTF/GLB optimization, Draco &amp; KTX2, gltfjsx, and integrating AI-generated models (Meshy / Tripo).</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section class="section" id="skills">
+      <div class="section__head reveal">
+        <span class="kicker">04 — Skills</span>
+        <h2>Guided workflows, one command away.</h2>
+      </div>
+      <div class="cards cards--skills">
+        <article class="card card--skill reveal">
+          <code>/scaffold-3d-site</code>
+          <p>Spin up a fresh project — Vite/Next + R3F + drei + postprocessing + motion.</p>
+        </article>
+        <article class="card card--skill reveal">
+          <code>/optimize-3d-assets</code>
+          <p>Compress models &amp; textures with gltf-transform, gltfpack, Draco and KTX2.</p>
+        </article>
+        <article class="card card--skill reveal">
+          <code>/add-postprocessing</code>
+          <p>Add cinematic bloom, depth-of-field, grain and tone-mapping to an R3F scene.</p>
+        </article>
+        <article class="card card--skill reveal">
+          <code>/scroll-3d-scene</code>
+          <p>Wire scroll-driven 3D with Lenis + GSAP, or in-canvas drei ScrollControls.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- STACK -->
+    <section class="section" id="stack">
+      <div class="section__head reveal">
+        <span class="kicker">Recommended stack · 2026</span>
+        <h2>The tech the pack reaches for.</h2>
+      </div>
+      <div class="stack__groups">
+        <div class="stack__group reveal">
+          <h4>Render</h4>
+          <ul><li>React Three Fiber + drei</li><li>Three.js</li><li>WebGPU + TSL</li><li>Babylon.js</li></ul>
+        </div>
+        <div class="stack__group reveal">
+          <h4>Motion</h4>
+          <ul><li>GSAP + ScrollTrigger</li><li>Lenis</li><li>react-spring</li><li>theatre.js</li></ul>
+        </div>
+        <div class="stack__group reveal">
+          <h4>Look</h4>
+          <ul><li>@react-three/postprocessing</li><li>Custom GLSL / TSL</li><li>HDRI environments</li><li>leva</li></ul>
+        </div>
+        <div class="stack__group reveal">
+          <h4>Assets &amp; perf</h4>
+          <ul><li>gltf-transform · gltfpack</li><li>Draco · KTX2 / Basis</li><li>stats-gl · r3f-perf</li><li>Meshy · Tripo · Spline</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="section install" id="install">
+      <div class="section__head reveal">
+        <span class="kicker">Install</span>
+        <h2>Drop it into Claude&nbsp;Code.</h2>
+        <p class="lead">Clone the repo and copy the agents &amp; skills into your global <code>~/.claude</code> — they’ll work in every project.</p>
+      </div>
+      <div class="code-block reveal">
+<pre><code><span class="c-comment"># 1. clone the pack</span>
+git clone https://github.com/skinnye/3d-web-pack.git
+
+<span class="c-comment"># 2. install agents + skills globally</span>
+cp -r 3d-web-pack/agents/* ~/.claude/agents/
+cp -r 3d-web-pack/skills/* ~/.claude/skills/
+
+<span class="c-comment"># 3. start building</span>
+<span class="c-str">"Plan a 3D landing page for a sneaker brand"</span>  <span class="c-comment">→ threejs-architect</span>
+<span class="c-str">"/scaffold-3d-site"</span>                            <span class="c-comment">→ fresh project</span>
+<span class="c-str">"Make an iridescent liquid sphere"</span>            <span class="c-comment">→ shader-artist</span></code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner reveal">
+      <span class="footer__brand">◈ 3D Web Pack</span>
+      <p>Built with Three.js, GSAP &amp; the pack itself. MIT licensed.</p>
+      <a class="btn btn--ghost" href="https://github.com/skinnye/3d-web-pack" target="_blank" rel="noopener" data-gh>View on GitHub →</a>
+    </div>
+  </footer>
+
+  <script type="module" src="assets/main.js"></script>
+</body>
+</html>

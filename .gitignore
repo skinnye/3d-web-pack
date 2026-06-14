@@ -1,0 +1,15 @@
+# Local Claude Code config (not part of the distributable pack)
+.claude/
+
+# Dependencies / build
+node_modules/
+dist/
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.vscode/
+.idea/
