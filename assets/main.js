@@ -106,7 +106,6 @@ const lowPower =
   window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
 const GEO_DETAIL = lowPower ? 14 : 24;        // was 64 — the main cost
 const PARTICLE_COUNT = lowPower ? 450 : 900;  // was 1400
-let bloomEnabled = !lowPower;
 let qualityTier = 0;                          // escalates as we downgrade
 let pageVisible = true;
 let maxPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.5);
@@ -131,6 +130,7 @@ function initScene() {
   }
   renderer.setPixelRatio(maxPR);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.autoClear = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
 
@@ -169,6 +169,7 @@ function initScene() {
   composer.addPass(new RenderPass(scene, camera));
   // bloom rendered at half resolution — big saving, look is unchanged
   bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth * 0.5, window.innerHeight * 0.5), 0.7, 0.5, 0.7);
+  bloom.enabled = !lowPower;
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
@@ -197,7 +198,7 @@ let _frames = 0, _acc = 0, _last = performance.now(), _skip = 0;
 // step down quality if the average frame-rate is poor (weak GPUs)
 function downgrade(fps) {
   if (fps >= 48) return;
-  if (qualityTier === 0) { qualityTier = 1; bloomEnabled = false; }                 // 1: drop bloom
+  if (qualityTier === 0) { qualityTier = 1; bloom.enabled = false; }                 // 1: drop bloom
   else if (qualityTier === 1 && fps < 44) { qualityTier = 2; maxPR = 1; renderer.setPixelRatio(1); onResize(); }   // 2: drop resolution
   else if (qualityTier === 2 && fps < 36) { qualityTier = 3; renderer.setPixelRatio(0.85); onResize(); }            // 3: render below native
 }
@@ -227,8 +228,7 @@ function animate() {
     particles.rotation.x = t * 0.01;
   }
 
-  if (bloomEnabled) composer.render();
-  else renderer.render(scene, camera);
+  composer.render();   // single, consistent render path (bloom toggled via bloom.enabled)
 
   // sample fps once per second (only while the hero is on screen) and adapt
   if (!farAway) {
