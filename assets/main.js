@@ -98,6 +98,18 @@ const fragmentShader = /* glsl */ `
 
 let renderer, scene, camera, composer, blob, particles, bloom;
 let lenis = null;
+
+// --- adaptive quality (laptops with weak / integrated GPUs) ---
+const lowPower =
+  ((navigator.hardwareConcurrency || 8) <= 4) ||
+  ((navigator.deviceMemory || 8) <= 4) ||
+  window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+const GEO_DETAIL = lowPower ? 14 : 24;        // was 64 — the main cost
+const PARTICLE_COUNT = lowPower ? 450 : 900;  // was 1400
+let bloomEnabled = !lowPower;
+let qualityTier = 0;                          // escalates as we downgrade
+let pageVisible = true;
+let maxPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.5);
 const uniforms = {
   uTime:     { value: 0 },
   uDisplace: { value: 0.42 },
@@ -112,13 +124,12 @@ const clock = new THREE.Clock();
 function initScene() {
   const canvas = document.getElementById('webgl');
   try {
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   } catch (e) {
     canvas.style.display = 'none';
     return false;
   }
-  const pr = Math.min(window.devicePixelRatio || 1, 2);
-  renderer.setPixelRatio(pr);
+  renderer.setPixelRatio(maxPR);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -128,13 +139,13 @@ function initScene() {
   camera.position.set(0, 0, 5.2);
 
   // central blob
-  const geo = new THREE.IcosahedronGeometry(1.5, 64);
+  const geo = new THREE.IcosahedronGeometry(1.5, GEO_DETAIL);
   const mat = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
   blob = new THREE.Mesh(geo, mat);
   scene.add(blob);
 
   // particle field
-  const count = 1400;
+  const count = PARTICLE_COUNT;
   const positions = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const r = 4 + Math.pow(Math.random(), 0.6) * 9;
@@ -156,12 +167,14 @@ function initScene() {
   // post-processing: bloom
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.55, 0.65);
+  // bloom rendered at half resolution — big saving, look is unchanged
+  bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth * 0.5, window.innerHeight * 0.5), 0.7, 0.5, 0.7);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   window.addEventListener('resize', onResize);
   window.addEventListener('pointermove', onPointerMove, { passive: true });
+  document.addEventListener('visibilitychange', () => { pageVisible = !document.hidden; });
   return true;
 }
 
@@ -171,6 +184,7 @@ function onResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
   composer.setSize(w, h);
+  bloom.setSize(w * 0.5, h * 0.5);   // keep bloom at half res after resize
 }
 
 function onPointerMove(e) {
@@ -178,26 +192,50 @@ function onPointerMove(e) {
   pointer.ty = -((e.clientY / window.innerHeight) * 2 - 1);
 }
 
+let _frames = 0, _acc = 0, _last = performance.now(), _skip = 0;
+
+// step down quality if the average frame-rate is poor (weak GPUs)
+function downgrade(fps) {
+  if (fps >= 48) return;
+  if (qualityTier === 0) { qualityTier = 1; bloomEnabled = false; }                 // 1: drop bloom
+  else if (qualityTier === 1 && fps < 44) { qualityTier = 2; maxPR = 1; renderer.setPixelRatio(1); onResize(); }   // 2: drop resolution
+  else if (qualityTier === 2 && fps < 36) { qualityTier = 3; renderer.setPixelRatio(0.85); onResize(); }            // 3: render below native
+}
+
 function animate() {
   requestAnimationFrame(animate);
+  if (!pageVisible) return;                       // pause when tab is hidden
+
+  const now = performance.now();
+  // the canvas is a fixed background — throttle to ~30fps once it's scrolled out of focus
+  const farAway = window.scrollY > window.innerHeight * 1.25;
+  if (farAway) { _skip ^= 1; if (_skip) { _last = now; return; } }
+
   const t = clock.getElapsedTime();
   uniforms.uTime.value = t;
 
-  // ease pointer
   pointer.x += (pointer.tx - pointer.x) * 0.05;
   pointer.y += (pointer.ty - pointer.y) * 0.05;
 
   if (blob) {
     blob.rotation.y = t * 0.12 + pointer.x * 0.5;
     blob.rotation.x = pointer.y * 0.4;
-    const s = 1 + Math.sin(t * 0.8) * 0.015;
-    blob.scale.setScalar(s);
+    blob.scale.setScalar(1 + Math.sin(t * 0.8) * 0.015);
   }
   if (particles) {
     particles.rotation.y = t * 0.02;
     particles.rotation.x = t * 0.01;
   }
-  composer.render();
+
+  if (bloomEnabled) composer.render();
+  else renderer.render(scene, camera);
+
+  // sample fps once per second (only while the hero is on screen) and adapt
+  if (!farAway) {
+    _frames++; _acc += now - _last;
+    if (_acc >= 1000) { downgrade(_frames * 1000 / _acc); _frames = 0; _acc = 0; }
+  } else { _frames = 0; _acc = 0; }
+  _last = now;
 }
 
 /* ============================================================
