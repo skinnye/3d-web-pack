@@ -198,6 +198,12 @@ Step-by-step procedure the model follows.
 
 ---
 
+## 🔗 Related packs
+
+- [**Generative Art Pack**](https://github.com/skinnye/generative-art-pack) — generative art & creative coding (p5.js, GLSL, flow fields, attractors, hash-seeded series) with a live browser gallery. Shares the `shader-artist` agent.
+
+---
+
 ## 🤝 Contributing
 
 PRs welcome — add an agent or skill, improve a prompt, or extend the stack guidance. Keep agent descriptions specific (they drive auto-selection) and skills procedural.
