@@ -108,6 +108,7 @@ const GEO_DETAIL = lowPower ? 14 : 24;        // was 64 — the main cost
 const PARTICLE_COUNT = lowPower ? 450 : 900;  // was 1400
 let qualityTier = 0;                          // escalates as we downgrade
 let pageVisible = true;
+let heroEl = null;
 let maxPR = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.5);
 const uniforms = {
   uTime:     { value: 0 },
@@ -122,20 +123,22 @@ const clock = new THREE.Clock();
 
 function initScene() {
   const canvas = document.getElementById('webgl');
+  heroEl = document.getElementById('hero');
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   } catch (e) {
     canvas.style.display = 'none';
     return false;
   }
+  const w = heroEl.clientWidth, h = heroEl.clientHeight;
   renderer.setPixelRatio(maxPR);
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
   renderer.autoClear = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
   camera.position.set(0, 0, 5.2);
 
   // central blob
@@ -168,7 +171,7 @@ function initScene() {
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   // bloom rendered at half resolution — big saving, look is unchanged
-  bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth * 0.5, window.innerHeight * 0.5), 0.7, 0.5, 0.7);
+  bloom = new UnrealBloomPass(new THREE.Vector2(w * 0.5, h * 0.5), 0.7, 0.5, 0.7);
   bloom.enabled = !lowPower;
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
@@ -180,7 +183,8 @@ function initScene() {
 }
 
 function onResize() {
-  const w = window.innerWidth, h = window.innerHeight;
+  if (!heroEl) return;
+  const w = heroEl.clientWidth, h = heroEl.clientHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
@@ -208,8 +212,8 @@ function animate() {
   if (!pageVisible) return;                       // pause when tab is hidden
 
   const now = performance.now();
-  // the blob is a hero element that fades out on scroll — stop rendering once it's gone
-  if (window.scrollY > window.innerHeight * 0.82) { _last = now; _frames = 0; _acc = 0; return; }
+  // the canvas lives in the hero — stop rendering once the hero is scrolled out of view
+  if (heroEl && heroEl.getBoundingClientRect().bottom <= 0) { _last = now; _frames = 0; _acc = 0; return; }
 
   const t = clock.getElapsedTime();
   uniforms.uTime.value = t;
@@ -271,17 +275,6 @@ function initMotion() {
       onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, stagger: 0.08, ease: 'power3.out', overwrite: true }),
       once: true,
     });
-
-    // subtle scroll choreography on the 3D scene
-    gsap.to(camera ? camera.position : {}, {
-      z: 7, ease: 'none',
-      scrollTrigger: { trigger: '#about', start: 'top bottom', end: 'bottom top', scrub: 1 },
-      onUpdate: () => camera && camera.updateProjectionMatrix(),
-    });
-    gsap.to(uniforms.uDisplace, {
-      value: 0.18, ease: 'none',
-      scrollTrigger: { trigger: '#stack', start: 'top bottom', end: 'bottom center', scrub: 1 },
-    });
   }
 
   // animated counters
@@ -301,13 +294,7 @@ function initMotion() {
    ============================================================ */
 function initUI() {
   const nav = document.getElementById('nav');
-  const webgl = document.getElementById('webgl');
-  const onScroll = () => {
-    const y = window.scrollY;
-    nav.classList.toggle('is-scrolled', y > 40);
-    // the 3D blob belongs to the hero — fade it out so it never bisects content below
-    if (webgl) webgl.style.opacity = Math.max(0, 1 - y / (window.innerHeight * 0.8)).toFixed(3);
-  };
+  const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 40);
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
 
